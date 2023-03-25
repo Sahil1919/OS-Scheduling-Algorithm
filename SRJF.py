@@ -14,35 +14,44 @@ def execute_all_process():
         completed_process.append(temp_process)
     
 def process_to_run(process:set,diff:int): 
+
+    temp_diff = diff
           
     process_run_com = process[1][1] - diff
 
-    if process_run_com != 0 :
+    # process_run_com = process_run_com if process_run_com >= 0 else diff-process[1][1] 
+
+    if process_run_com > 0 :
         temp_process = [process[0],[process[1][0],process_run_com]]
         waiting_process.append(temp_process)
 
         update_sorted_process = list(process)
 
-        update_sorted_process[1][1] = process_run_com
-        
-        diff -= diff
+        if comp_time:
+            
+            update_sorted_process[1][1] =  comp_time[-1][1][1] + temp_diff
 
-        return temp_process
+        else : update_sorted_process[1][1] =  process[1][1] - process_run_com
+        
+        return update_sorted_process
     
     else:
-        temp_process = [process[0],[process[1][0],process[1][1]+diff]]
+        diff = diff if process[1][1] >= diff else process[1][1]
+        temp_process = [process[0],[process[1][0],completed_process[-1][1][1]+diff]]
         process_to_pop = [index for (index, item) in enumerate(waiting_process) if item[0] == process[0]]
         waiting_process.pop(process_to_pop[0])
         comp_time.append(temp_process)
+
+        diff = temp_diff-diff
         
-        return temp_process
+        return {'temp_process':temp_process,"remaining_time":diff}
 
 if __name__ == "__main__":
     
-    dict_obj = {"P1":[0,5],
+    dict_obj = {"P1":[3,5],
             "P2":[1,3],
-            "P3":[2,4],
-            "P4":[4,1],
+            "P3":[3,4],
+            "P4":[5,1],
             # "P5":[5,1],
     }
     
@@ -59,14 +68,35 @@ if __name__ == "__main__":
     ct = 0
     for index, process in enumerate(sorted_process):           
         try:  
+            if index == 0 and process[1][0] > 0:
+                ct += process[1][0]
 
             diff = sorted_process[index+1][1][0] - sorted_process[index][1][0]
 
-            if diff > 1:
+
+            if diff==0 or diff > 1:
+                if diff==0:
+                    diff = sorted_process[index+2][1][0] - sorted_process[index+1][1][0]
+                    waiting_process.append(sorted_process[index+1])
                 waiting_process.append(list(process))
                 short_process = sorted(dict(waiting_process).items(), key= lambda kv:kv[1][1])
                 temp_process = process_to_run(short_process[0],diff)
-            
+
+                try:
+                    while temp_process['remaining_time'] > 0:
+                        completed_process.append(temp_process['temp_process'])
+                        short_process = sorted(dict(waiting_process).items(), key= lambda kv:kv[1][1])
+                        temp_process = process_to_run(short_process[0], temp_process['remaining_time'])
+                except Exception as e:
+                    process_to_pop = [index for (index, item) in enumerate(waiting_process) if item[0] == temp_process[0]]
+                    waiting_process.pop(process_to_pop[0])
+                    temp_process[1][1] += ct
+                    completed_process.append(temp_process)
+                # finally:
+                #     if (temp_process) == dict(): temp_process =  temp_process['temp_process']
+
+                # completed_process.append(temp_process)
+
 
             else:
                 process_to_run(sorted_process[index],diff)
@@ -75,7 +105,7 @@ if __name__ == "__main__":
 
                 temp_process = [process[0],[process[1][0],ct]] 
             
-            completed_process.append(temp_process)
+                completed_process.append(temp_process)
 
         except IndexError:
             
