@@ -25,7 +25,7 @@ def process_to_run(process:set,diff:int):
         temp_process = [process[0],[process[1][0],process_run_com]]
         waiting_process.append(temp_process)
 
-        update_sorted_process = list(process)
+        update_sorted_process = list(process)  
 
         if comp_time:
             
